@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TaskFormData, Task } from '@/types/task';
+import { TaskFormData, Task, TaskFormErrors } from '@/types/task';
 import { validateTaskForm } from '@/utils/validation';
 
 interface TaskFormProps {
@@ -17,7 +17,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancel }: TaskFormPr
     status: 'todo',
     description: '',
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<TaskFormErrors>({});
 
   useEffect(() => {
     if (editingTask) {
@@ -59,18 +59,13 @@ export default function TaskForm({ onSubmit, editingTask, onCancel }: TaskFormPr
 
   const handleChange = (field: keyof TaskFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+    if (errors[field as keyof TaskFormErrors]) {
+      setErrors(prev => ({ ...prev, [field as keyof TaskFormErrors]: '' }));
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {editingTask ? 'Edit Task' : 'Add New Task'}
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
             Task Name *
@@ -137,22 +132,21 @@ export default function TaskForm({ onSubmit, editingTask, onCancel }: TaskFormPr
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors flex-1"
           >
             {editingTask ? 'Update Task' : 'Add Task'}
           </button>
           
-          {editingTask && onCancel && (
+          {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+              className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors flex-1"
             >
               Cancel
             </button>
           )}
         </div>
-      </form>
-    </div>
+    </form>
   );
 }

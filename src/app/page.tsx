@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useTasks } from '@/hooks/useTasks';
-import { TaskFormData } from '@/types/task';
+import { TaskFormData, Task } from '@/types/task';
 import TaskForm from '@/components/TaskForm';
 import TaskList from '@/components/TaskList';
 import Filter from '@/components/Filter';
+import Modal from '@/components/Modal';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function Home() {
   const {
@@ -21,11 +23,13 @@ export default function Home() {
     toggleTaskStatus,
   } = useTasks();
 
-  const [showForm, setShowForm] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
   const handleAddTask = (taskData: TaskFormData) => {
     addTask(taskData);
-    setShowForm(false);
+    setIsModalOpen(false);
   };
 
   const handleUpdateTask = (taskData: TaskFormData) => {
@@ -34,14 +38,36 @@ export default function Home() {
     }
   };
 
-  const handleEditTask = (task: any) => {
+  const handleEditTask = (task: Task) => {
     setEditingTask(task);
-    setShowForm(true);
+    setIsModalOpen(true);
   };
 
   const handleCancelEdit = () => {
     setEditingTask(null);
-    setShowForm(false);
+    setIsModalOpen(false);
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingTask(null);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setTaskToDelete(taskId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTask = () => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete);
+      setTaskToDelete(null);
+    }
+  };
+
+  const cancelDeleteTask = () => {
+    setTaskToDelete(null);
+    setIsDeleteDialogOpen(false);
   };
 
   const taskCounts = {
@@ -85,25 +111,14 @@ export default function Home() {
         </div>
 
         {/* Add Task Button */}
-        {!showForm && (
-          <div className="text-center mb-6">
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-blue-600 text-white px-6 lg:px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl text-sm lg:text-base"
-            >
-              ➕ Add New Task
-            </button>
-          </div>
-        )}
-
-        {/* Task Form */}
-        {showForm && (
-          <TaskForm
-            onSubmit={editingTask ? handleUpdateTask : handleAddTask}
-            editingTask={editingTask}
-            onCancel={editingTask ? handleCancelEdit : () => setShowForm(false)}
-          />
-        )}
+        <div className="text-center mb-6">
+          <button
+            onClick={handleOpenAddModal}
+            className="bg-blue-600 text-white px-6 lg:px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl text-sm lg:text-base"
+          >
+            ➕ Add New Task
+          </button>
+        </div>
 
         {/* Filter */}
         <Filter
@@ -116,8 +131,32 @@ export default function Home() {
         <TaskList
           tasks={tasks}
           onEdit={handleEditTask}
-          onDelete={deleteTask}
+          onDelete={handleDeleteTask}
           onToggleStatus={toggleTaskStatus}
+        />
+
+        {/* Task Modal */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCancelEdit}
+          title={editingTask ? 'Edit Task' : 'Add New Task'}
+        >
+          <TaskForm
+            onSubmit={editingTask ? handleUpdateTask : handleAddTask}
+            editingTask={editingTask}
+            onCancel={handleCancelEdit}
+          />
+        </Modal>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={cancelDeleteTask}
+          onConfirm={confirmDeleteTask}
+          title="Delete Task"
+          message="Are you sure you want to delete this task? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
         />
       </div>
     </div>
